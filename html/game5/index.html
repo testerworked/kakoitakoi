@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Tycoon: Rise of Innovation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="language-selector">
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+                <option value="zh">中文</option>
+            </select>
+        </div>
+        
+        <h1 id="game-title">Tech Tycoon: Rise of Innovation</h1>
+        
+        <div class="stats-container">
+            <div class="stat">
+                <span id="money-label">Money:</span>
+                <span id="money">$0</span>
+            </div>
+            <div class="stat">
+                <span id="reputation-label">Reputation:</span>
+                <span id="reputation">0</span>
+            </div>
+            <div class="stat">
+                <span id="tech-level-label">Tech Level:</span>
+                <span id="tech-level">1</span>
+            </div>
+        </div>
+        
+        <div class="actions-container">
+            <h2 id="actions-label">Actions</h2>
+            <button id="develop-btn" class="action-btn">Develop Product</button>
+            <button id="market-btn" class="action-btn">Market Research</button>
+            <button id="hire-btn" class="action-btn">Hire Developer</button>
+            <button id="upgrade-btn" class="action-btn">Upgrade Tech</button>
+        </div>
+        
+        <div class="products-container">
+            <h2 id="products-label">Products</h2>
+            <div id="products-list" class="products-list"></div>
+        </div>
+        
+        <div class="log-container">
+            <h2 id="event-log-label">Event Log</h2>
+            <div id="event-log" class="event-log"></div>
+        </div>
+    </div>
+    
+    <script src="translations.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

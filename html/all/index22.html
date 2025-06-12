@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация пользователя</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background: #45a049; }
+        #message { margin-top: 20px; padding: 10px; border-radius: 4px; }
+        .success { background: #dff0d8; color: #3c763d; }
+        .error { background: #f2dede; color: #a94442; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="page1">
+        <h1>Регистрация пользователя</h1>
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="username">Имя пользователя:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="telephone">Номер телефона:</label>
+                <input type="tel" id="telephone" required>
+            </div>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <div id="page2" class="hidden">
+        <h1>Выберите технологии</h1>
+        <div id="technologies"></div>
+        <button id="saveTech">Сохранить выбор</button>
+        <div id="techMessage"></div>
+    </div>
+
+    <script>
+        // Инициализация базы данных
+        const dbName = "UserTechDB";
+        const dbVersion = 1;
+        
+        let db;
+        const request = indexedDB.open(dbName, dbVersion);
+
+        // Создание структуры базы данных
+        request.onupgradeneeded = function(event) {
+            const db = event.target.result;
+            
+            // Таблица Users
+            const usersStore = db.createObjectStore("Users", { keyPath: "id" });
+            usersStore.createIndex("email", "email", { unique: true });
+            usersStore.createIndex("telephone", "telephone", { unique: true });
+            usersStore.createIndex("username", "username", { unique: true });
+            
+            // Таблица Сферы
+            const spheresStore = db.createObjectStore("Spheres", { keyPath: "id" });
+            spheresStore.createIndex("name", "name", { unique: true });
+            
+            // Таблица Technology
+            const techStore = db.createObjectStore("Technology", { keyPath: "id" });
+            techStore.createIndex("name", "name", { unique: true });
+            techStore.createIndex("sphereId", "sphereId");
+            
+            // Добавляем тестовые данные
+            const spheres = [
+                { id: 1, name: "Веб-разработка" },
+                { id: 2, name: "Мобильная разработка" }
+            ];
+            
+            const technologies = [
+                { id: 1, name: "JavaScript", sphereId: 1 },
+                { id: 2, name: "Python", sphereId: 1 },
+                { id: 3, name: "Kotlin", sphereId: 2 },
+                { id: 4, name: "Swift", sphereId: 2 }
+            ];
+            
+            spheres.forEach(sphere => {
+                spheresStore.add(sphere);
+            });
+            
+            technologies.forEach(tech => {
+                techStore.add(tech);
+            });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            console.log("База данных успешно открыта");
+            
+            // Обработчик формы регистрации
+            document.getElementById("registrationForm").addEventListener("submit", function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById("username").value;
+                const email = document.getElementById("email").value;
+                const telephone = document.getElementById("telephone").value;
+                
+                const transaction = db.transaction(["Users"], "readwrite");
+                const usersStore = transaction.objectStore("Users");
+                
+                const newUser = {
+                    id: Date.now(),
+                    username: username,
+                    email: email,
+                    telephone: telephone
+                };
+                
+                const request = usersStore.add(newUser);
+                
+                request.onsuccess = function() {
+                    showMessage("Регистрация прошла успешно!", "success");
+                    localStorage.setItem("currentUserId", newUser.id);
+                    
+                    // Показываем вторую страницу через 2 секунды
+                    setTimeout(() => {
+                        document.getElementById("page1").classList.add("hidden");
+                        document.getElementById("page2").classList.remove("hidden");
+                        loadTechnologies();
+                    }, 2000);
+                };
+                
+                request.onerror = function(event) {
+                    if (event.target.error.name === "ConstraintError") {
+                        showMessage("Пользователь с таким email, телефоном или именем уже существует!", "error");
+                    } else {
+                        showMessage("Ошибка при регистрации: " + event.target.error, "error");
+                    }
+                };
+            });
+            
+            // Обработчик сохранения выбранных технологий
+            document.getElementById("saveTech").addEventListener("click", function() {
+                const selectedTechs = Array.from(document.querySelectorAll('input[name="tech"]:checked')).map(el => el.value);
+                const userId = localStorage.getItem("currentUserId");
+                
+                if (!userId || selectedTechs.length === 0) {
+                    document.getElementById("techMessage").textContent = "Пожалуйста, выберите хотя бы одну технологию";
+                    document.getElementById("techMessage").className = "error";
+                    return;
+                }
+                
+                const transaction = db.transaction(["Users"], "readwrite");
+                const usersStore = transaction.objectStore("Users");
+                
+                const getUserRequest = usersStore.get(parseInt(userId));
+                
+                getUserRequest.onsuccess = function() {
+                    const user = getUserRequest.result;
+                    user.technologies = selectedTechs;
+                    
+                    const updateRequest = usersStore.put(user);
+                    
+                    updateRequest.onsuccess = function() {
+                        document.getElementById("techMessage").textContent = "Ваши технологии сохранены!";
+                        document.getElementById("techMessage").className = "success";
+                    };
+                    
+                    updateRequest.onerror = function(event) {
+                        document.getElementById("techMessage").textContent = "Ошибка при сохранении: " + event.target.error;
+                        document.getElementById("techMessage").className = "error";
+                    };
+                };
+            });
+        };
+
+        request.onerror = function(event) {
+            console.error("Ошибка при открытии базы данных:", event.target.error);
+            showMessage("Ошибка при работе с базой данных", "error");
+        };
+        
+        function showMessage(text, type) {
+            const messageEl = document.getElementById("message");
+            messageEl.textContent = text;
+            messageEl.className = type;
+        }
+        
+        function loadTechnologies() {
+            const transaction = db.transaction(["Technology", "Spheres"], "readonly");
+            const techStore = transaction.objectStore("Technology");
+            const spheresStore = transaction.objectStore("Spheres");
+            
+            const techRequest = techStore.getAll();
+            const spheresRequest = spheresStore.getAll();
+            
+            Promise.all([
+                new Promise(resolve => {
+                    techRequest.onsuccess = () => resolve(techRequest.result);
+                }),
+                new Promise(resolve => {
+                    spheresRequest.onsuccess = () => resolve(spheresRequest.result);
+                })
+            ]).then(([technologies, spheres]) => {
+                const techBySphere = {};
+                
+                technologies.forEach(tech => {
+                    if (!techBySphere[tech.sphereId]) {
+                        techBySphere[tech.sphereId] = [];
+                    }
+                    techBySphere[tech.sphereId].push(tech);
+                });
+                
+                let html = '';
+                spheres.forEach(sphere => {
+                    if (techBySphere[sphere.id]) {
+                        html += `<h3>${sphere.name}</h3>`;
+                        techBySphere[sphere.id].forEach(tech => {
+                            html += `
+                                <div>
+                                    <input type="checkbox" id="tech_${tech.id}" name="tech" value="${tech.id}">
+                                    <label for="tech_${tech.id}">${tech.name}</label>
+                                </div>
+                            `;
+                        });
+                    }
+                });
+                
+                document.getElementById("technologies").innerHTML = html;
+            });
+        }
+    </script>
+</body>
+</html>

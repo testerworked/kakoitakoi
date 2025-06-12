@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Бизнесмены: покоряют мир технологий</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        #game {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        #stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+        #log {
+            height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .phase {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        #startupPhase {
+            background-color: #e8f4f8;
+            border-left: 5px solid #3498db;
+        }
+        #corporatePhase {
+            background-color: #e8f8f0;
+            border-left: 5px solid #2ecc71;
+            display: none;
+        }
+        #empirePhase {
+            background-color: #f8e8e8;
+            border-left: 5px solid #e74c3c;
+            display: none;
+        }
+        #officeImage {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 250px;
+            border: 3px solid #3498db;
+            border-radius: 10px;
+            display: none;
+        }
+        #winScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            text-align: center;
+            padding-top: 15%;
+            z-index: 1000;
+        }
+        .tech-progress {
+            height: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            margin: 5px 0;
+        }
+        .tech-progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            background-color: #3498db;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>IT Бизнесмены: Покоряют мир технологий</h1>
+        
+        <div id="phaseIndicator">
+            <div id="startupPhase" class="phase">Фаза: Стартап (Цель: $1,000,000)</div>
+            <div id="corporatePhase" class="phase">Фаза: Корпорация (Цель: $100,000,000)</div>
+            <div id="empirePhase" class="phase">Фаза: Глобальная Империя (Цель: $1,000,000,000)</div>
+        </div>
+        
+        <div id="stats">
+            <div>💰 Капитал: $<span id="money">10,000</span></div>
+            <div>📅 Месяц: <span id="month">1</span></div>
+            <div>🌍 Доля рынка: <span id="marketShare">0</span>%</div>
+        </div>
+        
+        <div id="office">
+            <button id="rentOfficeBtn" onclick="rentOffice()" disabled>Арендовать офис ($30,000)</button>
+            <p id="officeStatus">Офис: Нет</p>
+        </div>
+        
+        <div id="technologies">
+            <h3>Исследования</h3>
+            <div class="tech-item">
+                <p>Программное обеспечение (Уровень <span id="softwareLvl">0</span>)</p>
+                <div class="tech-progress"><div id="softwareProgress" class="tech-progress-bar"></div></div>
+                <button onclick="research('software')" id="researchSoftware">Исследовать ($1,000)</button>
+            </div>
+            <div class="tech-item">
+                <p>Аппаратное обеспечение (Уровень <span id="hardwareLvl">0</span>)</p>
+                <div class="tech-progress"><div id="hardwareProgress" class="tech-progress-bar"></div></div>
+                <button onclick="research('hardware')" id="researchHardware">Исследовать ($1,500)</button>
+            </div>
+            <div class="tech-item">
+                <p>Биотехнологии (Уровень <span id="biotechLvl">0</span>)</p>
+                <div class="tech-progress"><div id="biotechProgress" class="tech-progress-bar"></div></div>
+                <button onclick="research('biotech')" id="researchBiotech">Исследовать ($2,000)</button>
+            </div>
+        </div>
+        
+        <div id="employees">
+            <h3>Команда (<span id="employeeCount">0</span>/<span id="maxEmployees">3</span>)</h3>
+            <button onclick="hire('engineer')">Нанять инженера ($500/мес)</button>
+            <button onclick="hire('manager')" id="hireManager" disabled>Нанять менеджера ($1,000/мес)</button>
+            <button onclick="hire('scientist')" id="hireScientist" disabled>Нанять ученого ($2,000/мес)</button>
+        </div>
+        
+        <div id="specialActions">
+            <h3>Специальные возможности</h3>
+            <button onclick="launchIPO()" id="ipoBtn" disabled>Провести IPO ($10,000,000)</button>
+            <button onclick="takeoverCompetitor()" id="takeoverBtn" disabled>Поглотить конкурента ($50,000,000)</button>
+        </div>
+        
+        <div id="actions">
+            <button onclick="nextMonth()">Следующий месяц</button>
+            <button onclick="saveGame()">Сохранить игру</button>
+            <button onclick="loadGame()">Загрузить игру</button>
+        </div>
+        
+        <div id="log"></div>
+    </div>
+    
+    <div id="officeImage">
+        <img src="office1.png" alt="Офис" style="width: 100%;">
+        <p style="text-align: center; padding: 10px;">Главный офис компании</p>
+    </div>
+    
+    <div id="winScreen">
+        <h1 id="winTitle">Победа!</h1>
+        <p id="winText"></p>
+        <div id="winStats"></div>
+        <button onclick="resetGame()">Новая игра</button>
+    </div>
+
+    <script>
+        // Состояние игры
+        let gameState = {
+            money: 10000,
+            month: 1,
+            technologies: {
+                software: 0,
+                hardware: 0,
+                biotech: 0
+            },
+            employees: [],
+            hasOffice: false,
+            marketShare: 0,
+            phase: 'startup',
+            completedIPOs: 0,
+            takeovers: 0,
+            events: []
+        };
+
+        // Константы игры
+        const PHASES = {
+            startup: {
+                name: "Стартап",
+                target: 1000000,
+                next: "corporate"
+            },
+            corporate: {
+                name: "Корпорация",
+                target: 100000000,
+                next: "empire"
+            },
+            empire: {
+                name: "Глобальная Империя",
+                target: 1000000000,
+                next: null
+            }
+        };
+
+        const TECH_NAMES = {
+            software: "Программное обеспечение",
+            hardware: "Аппаратное обеспечение",
+            biotech: "Биотехнологии"
+        };
+
+        // Инициализация игры
+        function initGame() {
+            updateUI();
+            log("Добро пожаловать в IT Бизнесмены! Ваша цель - построить технологическую империю.");
+            log("Начните с исследований и найма команды.");
+        }
+
+        // Основные функции игры
+        function updateUI() {
+            // Обновляем статистику
+            document.getElementById("money").textContent = gameState.money.toLocaleString();
+            document.getElementById("month").textContent = gameState.month;
+            document.getElementById("marketShare").textContent = gameState.marketShare;
+            
+            // Обновляем информацию о технологиях
+            for (const tech in gameState.technologies) {
+                document.getElementById(`${tech}Lvl`).textContent = gameState.technologies[tech];
+                document.getElementById(`${tech}Progress`).style.width = `${gameState.technologies[tech] * 10}%`;
+            }
+            
+            // Обновляем информацию о сотрудниках
+            document.getElementById("employeeCount").textContent = gameState.employees.length;
+            document.getElementById("maxEmployees").textContent = gameState.hasOffice ? 5 : 3;
+            
+            // Обновляем кнопки в зависимости от состояния
+            document.getElementById("rentOfficeBtn").disabled = gameState.money < 30000 || gameState.hasOffice;
+            document.getElementById("ipoBtn").disabled = gameState.money < 10000000 || gameState.phase !== 'corporate';
+            document.getElementById("takeoverBtn").disabled = gameState.money < 50000000 || gameState.phase !== 'empire';
+            
+            // Обновляем отображение текущей фазы
+            updatePhaseDisplay();
+            
+            // Проверяем условия победы
+            checkWinConditions();
+        }
+
+        function updatePhaseDisplay() {
+            // Скрываем все фазы
+            document.getElementById("startupPhase").style.display = "none";
+            document.getElementById("corporatePhase").style.display = "none";
+            document.getElementById("empirePhase").style.display = "none";
+            
+            // Показываем текущую фазу
+            if (gameState.phase === 'startup') {
+                document.getElementById("startupPhase").style.display = "block";
+                document.getElementById("startupPhase").innerHTML = 
+                    `Фаза: Стартап (Цель: $${PHASES.startup.target.toLocaleString()})`;
+            } else if (gameState.phase === 'corporate') {
+                document.getElementById("corporatePhase").style.display = "block";
+                document.getElementById("corporatePhase").innerHTML = 
+                    `Фаза: Корпорация (Цель: $${PHASES.corporate.target.toLocaleString()})`;
+                document.getElementById("hireManager").disabled = false;
+            } else if (gameState.phase === 'empire') {
+                document.getElementById("empirePhase").style.display = "block";
+                document.getElementById("empirePhase").innerHTML = 
+                    `Фаза: Глобальная Империя (Цель: $${PHASES.empire.target.toLocaleString()})`;
+                document.getElementById("hireScientist").disabled = false;
+            }
+        }
+
+        function nextMonth() {
+            gameState.month++;
+            
+            // Выплата зарплат
+            let salaryCost = 0;
+            gameState.employees.forEach(emp => {
+                if (emp === 'engineer') salaryCost += 500;
+                else if (emp === 'manager') salaryCost += 1000;
+                else if (emp === 'scientist') salaryCost += 2000;
+            });
+            gameState.money -= salaryCost;
+            if (salaryCost > 0) log(`Выплата зарплат: -$${salaryCost}`);
+            
+            // Доход от технологий
+            let techIncome = 0;
+            for (const tech in gameState.technologies) {
+                if (gameState.technologies[tech] > 0) {
+                    const income = gameState.technologies[tech] * 1000 * (gameState.phase === 'startup' ? 1 : gameState.phase === 'corporate' ? 2 : 3);
+                    techIncome += income;
+                }
+            }
+            gameState.money += techIncome;
+            if (techIncome > 0) log(`Продажи технологий: +$${techIncome}`);
+            
+            // Увеличение доли рынка
+            if (techIncome > 0) {
+                const shareIncrease = Math.min(5, Math.floor(techIncome / 5000));
+                gameState.marketShare = Math.min(gameState.marketShare + shareIncrease, 100);
+            }
+            
+            // Случайные события
+            if (Math.random() < 0.3) randomEvent();
+            
+            // Проверка перехода на новый уровень
+            checkPhaseTransition();
+            
+            updateUI();
+        }
+
+        function checkPhaseTransition() {
+            const currentPhase = PHASES[gameState.phase];
+            if (gameState.money >= currentPhase.target && currentPhase.next) {
+                gameState.phase = currentPhase.next;
+                log(`🎉 Поздравляем! Ваша компания перешла на уровень "${PHASES[gameState.phase].name}"!`);
+                
+                // Специальные бонусы при переходе
+                if (gameState.phase === 'corporate') {
+                    log("Теперь вы можете проводить IPO для привлечения инвестиций!");
+                    document.getElementById("hireManager").disabled = false;
+                } else if (gameState.phase === 'empire') {
+                    log("Теперь вы можете поглощать конкурентов и влиять на глобальную экономику!");
+                    document.getElementById("hireScientist").disabled = false;
+                }
+            }
+        }
+
+        function checkWinConditions() {
+            if (gameState.phase === 'empire' && gameState.money >= PHASES.empire.target) {
+                let winTitle = "";
+                let winText = "";
+                let winStats = `<p>Итоговый капитал: $${gameState.money.toLocaleString()}</p>
+                               <p>Достигнуто за ${gameState.month} месяцев</p>
+                               <p>Уровень технологий: 
+                               ПО ${gameState.technologies.software}, 
+                               Железо ${gameState.technologies.hardware}, 
+                               Биотех ${gameState.technologies.biotech}</p>`;
+                
+                // Определяем тип победы
+                if (gameState.marketShare >= 90) {
+                    winTitle = "Глобальная Монополия";
+                    winText = "Вы контролируете 90% мирового рынка технологий! Никто не может бросить вам вызов.";
+                } else if (gameState.technologies.software >= 15 && gameState.technologies.hardware >= 15 && gameState.technologies.biotech >= 15) {
+                    winTitle = "Технологическая Сингулярность";
+                    winText = "Ваши разработки привели к технологической сингулярности. Человечество никогда не будет прежним.";
+                } else if (gameState.takeovers >= 5) {
+                    winTitle = "Империя Поглощений";
+                    winText = "Вы поглотили всех основных конкурентов. Теперь вы диктуете правила на рынке.";
+                } else {
+                    winTitle = "Финансовая Империя";
+                    winText = "Вы достигли капитала в $1,000,000,000! Ваше имя вписано в историю бизнеса.";
+                }
+                
+                showWinScreen(winTitle, winText, winStats);
+            }
+        }
+
+        function showWinScreen(title, text, stats) {
+            document.getElementById("winTitle").textContent = title;
+            document.getElementById("winText").textContent = text;
+            document.getElementById("winStats").innerHTML = stats;
+            document.getElementById("winScreen").style.display = "block";
+        }
+
+        // Действия игрока
+        function research(tech) {
+            const baseCost = { software: 1000, hardware: 1500, biotech: 2000 }[tech];
+            const discount = gameState.hasOffice ? 0.8 : 1;
+            const cost = Math.floor(baseCost * discount);
+            
+            if (gameState.money >= cost) {
+                gameState.money -= cost;
+                gameState.technologies[tech]++;
+                log(`Исследована технология "${TECH_NAMES[tech]}" (Уровень ${gameState.technologies[tech]})`);
+            } else {
+                log(`Недостаточно денег для исследования "${TECH_NAMES[tech]}" (нужно $${cost})`);
+            }
+            updateUI();
+        }
+
+        function hire(type) {
+            const maxEmployees = gameState.hasOffice ? 5 : 3;
+            if (gameState.employees.length >= maxEmployees) {
+                log(`Достигнут лимит сотрудников (${maxEmployees})!`);
+                return;
+            }
+            
+            let cost = 0;
+            let position = "";
+            
+            switch(type) {
+                case 'engineer':
+                    cost = 500;
+                    position = "инженер";
+                    break;
+                case 'manager':
+                    cost = 1000;
+                    position = "менеджер";
+                    break;
+                case 'scientist':
+                    cost = 2000;
+                    position = "ученый";
+                    break;
+            }
+            
+            if (gameState.money >= cost) {
+                gameState.money -= cost;
+                gameState.employees.push(type);
+                log(`Нанят ${position}!`);
+            } else {
+                log(`Недостаточно денег для найма ${position} (нужно $${cost})`);
+            }
+            updateUI();
+        }
+
+        function rentOffice() {
+            if (gameState.money >= 30000 && !gameState.hasOffice) {
+                gameState.money -= 30000;
+                gameState.hasOffice = true;
+                log("Вы арендовали офис! Лимит сотрудников увеличен до 5, исследования дешевле на 20%.");
+                document.getElementById("officeImage").style.display = "block";
+                updateUI();
+            }
+        }
+
+        function launchIPO() {
+            if (gameState.money >= 10000000 && gameState.phase === 'corporate') {
+                const ipoAmount = 50000000 + Math.floor(Math.random() * 50000000);
+                gameState.money += ipoAmount;
+                gameState.completedIPOs++;
+                log(`🎉 Успешное IPO! Вы привлекли $${ipoAmount.toLocaleString()} инвестиций.`);
+            }
+            updateUI();
+        }
+
+        function takeoverCompetitor() {
+            if (gameState.money >= 50000000 && gameState.phase === 'empire') {
+                gameState.money -= 50000000;
+                gameState.takeovers++;
+                const competitorNames = ["NeuroTech", "QuantumSoft", "BioFuture", "NanoSystems"];
+                const name = competitorNames[Math.floor(Math.random() * competitorNames.length)];
+                log(`🛡️ Вы поглотили ${name} Inc. за $50,000,000! Ваша доля рынка увеличивается.`);
+                gameState.marketShare = Math.min(gameState.marketShare + 10, 100);
+            }
+            updateUI();
+        }
+
+        // Случайные события
+        function randomEvent() {
+            const events = [];
+            
+            // Общие события
+            events.push(
+                { text: "Хакеры атаковали ваши системы! Потеряно $10,000.", action: () => gameState.money -= 10000 },
+                { text: "Инвестор вложил $25,000 в ваш стартап!", action: () => gameState.money += 25000 },
+                { text: "Экономический кризис! Продажи упали на 20% в этом месяце.", action: () => gameState.money *= 0.8 }
+            );
+            
+            // События для корпоративной фазы
+            if (gameState.phase === 'corporate' || gameState.phase === 'empire') {
+                events.push(
+                    { text: "Ваша технология получила премию! Продажи выросли.", action: () => gameState.marketShare = Math.min(gameState.marketShare + 5, 100) },
+                    { text: "Скандал с данными! Акции упали.", action: () => gameState.money *= 0.9 }
+                );
+            }
+            
+            // События для фазы империи
+            if (gameState.phase === 'empire') {
+                events.push(
+                    { text: "Правительство заказало ваши технологии для обороны! +$50,000,000", action: () => gameState.money += 50000000 },
+                    { text: "Глобальный сбой! Все технологические компании теряют доверие.", action: () => gameState.marketShare = Math.max(gameState.marketShare - 5, 0) }
+                );
+            }
+            
+            const event = events[Math.floor(Math.random() * events.length)];
+            event.action();
+            log("📢 Событие: " + event.text);
+        }
+
+        // Сохранение/загрузка
+        function saveGame() {
+            localStorage.setItem('techTycoonSave', JSON.stringify(gameState));
+            log("Игра сохранена!");
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('techTycoonSave');
+            if (saved) {
+                gameState = JSON.parse(saved);
+                log("Игра загружена!");
+                updateUI();
+            } else {
+                log("Нет сохраненной игры");
+            }
+        }
+
+        function resetGame() {
+            if (confirm("Начать новую игру? Текущий прогресс будет потерян.")) {
+                gameState = {
+                    money: 10000,
+                    month: 1,
+                    technologies: {
+                        software: 0,
+                        hardware: 0,
+                        biotech: 0
+                    },
+                    employees: [],
+                    hasOffice: false,
+                    marketShare: 0,
+                    phase: 'startup',
+                    completedIPOs: 0,
+                    takeovers: 0,
+                    events: []
+                };
+                document.getElementById("winScreen").style.display = "none";
+                document.getElementById("log").innerHTML = "";
+                initGame();
+            }
+        }
+
+        function log(message) {
+            const logElement = document.getElementById("log");
+            logElement.innerHTML += `<div>${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Запуск игры
+        initGame();
+    </script>
+</body>
+</html>

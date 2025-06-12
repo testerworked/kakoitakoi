@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .profile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .profile-info { background-color: #f5f5f5; padding: 20px; border-radius: 5px; }
+        .logout-btn { background-color: #f44336; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+        .logout-btn:hover { background-color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <div class="profile-header">
+        <h1>Ваш профиль</h1>
+        <button class="logout-btn" id="logoutBtn">Выйти</button>
+    </div>
+    
+    <div class="profile-info" id="profileInfo">
+        Загрузка данных...
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initDB();
+                
+                // Проверяем авторизацию
+                const user = await checkAuth();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Отображаем информацию о пользователе
+                document.getElementById('profileInfo').innerHTML = `
+                    <p><strong>Имя:</strong> ${user.username}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Дата регистрации:</strong> ${new Date(user.registrationDate).toLocaleDateString()}</p>
+                `;
+                
+                // Обработчик кнопки выхода
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    logout();
+                });
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>

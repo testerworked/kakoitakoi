@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; margin-bottom: 10px; }
+        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #45a049; }
+        .message { margin: 15px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #dff0d8; color: #3c763d; }
+        .error { background: #f2dede; color: #a94442; }
+        .hidden { display: none; }
+        .nav { margin-bottom: 20px; }
+        .nav button { background: #2196F3; }
+        .nav button:hover { background: #0b7dda; }
+        .profile-info { background: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .profile-field { margin-bottom: 15px; }
+        .profile-field label { font-weight: normal; color: #666; }
+        .profile-field span { display: block; padding: 5px 0; }
+        .edit-form { background: #f0f8ff; padding: 20px; border-radius: 5px; margin-top: 20px; }
+        .tech-list { margin-top: 10px; }
+        .tech-item { display: inline-block; background: #e1f5fe; padding: 5px 10px; margin: 0 5px 5px 0; border-radius: 3px; }
+        
+        /* Стили для чата */
+        .chat-container { display: flex; margin-top: 20px; }
+        .users-list { width: 250px; margin-right: 20px; background: #f5f5f5; padding: 15px; border-radius: 5px; }
+        .users-list h3 { margin-top: 0; }
+        .user-item { padding: 8px; cursor: pointer; border-bottom: 1px solid #ddd; }
+        .user-item:hover { background: #e9e9e9; }
+        .user-item.active { background: #d4edda; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; }
+        .chat-messages { flex: 1; height: 300px; overflow-y: auto; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
+        .message-item { margin-bottom: 10px; padding: 8px; border-radius: 4px; }
+        .message-item.sent { background: #e3f2fd; margin-left: 20px; }
+        .message-item.received { background: #f1f1f1; margin-right: 20px; }
+        .message-sender { font-weight: bold; color: #333; }
+        .message-time { font-size: 0.8em; color: #666; margin-left: 10px; }
+        .chat-input { display: flex; }
+        .chat-input textarea { flex: 1; margin-right: 10px; resize: none; }
+        
+        /* Стили для таблицы пользователей */
+        .users-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .users-table th, .users-table td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        .users-table th { background-color: #f2f2f2; }
+        .users-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .users-table tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+    <!-- Формы входа/регистрации -->
+    <div id="authSection">
+        <div class="nav">
+            <button id="showLogin">Вход</button>
+            <button id="showRegister">Регистрация</button>
+        </div>
+
+        <div id="loginFormContainer">
+            <h1>Вход в систему</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Пароль:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit">Войти</button>
+            </form>
+            <div id="loginMessage" class="message"></div>
+        </div>
+
+        <div id="registerFormContainer" class="hidden">
+            <h1>Регистрация пользователя</h1>
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label for="username">Имя пользователя:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль:</label>
+                    <input type="password" id="password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Подтвердите пароль:</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="telephone">Номер телефона:</label>
+                    <input type="tel" id="telephone" required>
+                </div>
+                <button type="submit">Зарегистрироваться</button>
+            </form>
+            <div id="registerMessage" class="message"></div>
+        </div>
+    </div>
+
+    <!-- Личный кабинет -->
+    <div id="dashboard" class="hidden">
+        <div class="nav">
+            <button id="logoutBtn">Выйти</button>
+        </div>
+        
+        <h1>Личный кабинет</h1>
+        
+        <div class="profile-info">
+            <h2>Профиль пользователя</h2>
+            <div class="profile-field">
+                <label>Имя пользователя:</label>
+                <span id="profileUsername"></span>
+            </div>
+            <div class="profile-field">
+                <label>Email:</label>
+                <span id="profileEmail"></span>
+            </div>
+            <div class="profile-field">
+                <label>Телефон:</label>
+                <span id="profilePhone"></span>
+            </div>
+            <div class="profile-field">
+                <label>Выбранные технологии:</label>
+                <div id="profileTech" class="tech-list"></div>
+            </div>
+            
+            <button id="editProfileBtn">Редактировать профиль</button>
+            <button id="openMenuBtn">Меню возможностей</button>
+            <button id="openChatBtn">Открыть чат</button>
+            <button id="showUsersBtn">Список пользователей</button>
+        </div>
+        
+        <!-- Форма редактирования -->
+        <div id="editProfileForm" class="edit-form hidden">
+            <h2>Редактирование профиля</h2>
+            <form id="updateProfileForm">
+                <div class="form-group">
+                    <label for="editUsername">Имя пользователя:</label>
+                    <input type="text" id="editUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email:</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">Телефон:</label>
+                    <input type="tel" id="editPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPassword">Новый пароль (оставьте пустым, если не хотите менять):</label>
+                    <input type="password" id="editPassword">
+                </div>
+                <button type="submit">Сохранить изменения</button>
+                <button type="button" id="cancelEditBtn">Отмена</button>
+            </form>
+            <div id="editMessage" class="message"></div>
+        </div>
+    </div>
+
+    <!-- Страница выбора технологий -->
+    <div id="techPage" class="hidden">
+        <div class="nav">
+            <button id="backToProfileBtn">← Назад в профиль</button>
+        </div>
+        
+        <h1>Выберите технологии</h1>
+        <div id="technologies"></div>
+        <button id="saveTech">Сохранить выбор</button>
+        <div id="techMessage" class="message"></div>
+    </div>
+
+    <!-- Меню возможностей -->
+    <div id="menuPage" class="hidden">
+        <div class="nav">
+            <button id="backToProfileFromMenuBtn">← Назад в профиль</button>
+        </div>
+        
+        <h1>Меню возможностей</h1>
+        <div class="profile-info">
+            <h2>Доступные функции</h2>
+            <button id="feature1Btn">Функция 1</button>
+            <button id="feature2Btn">Функция 2</button>
+            <button id="feature3Btn">Функция 3</button>
+        </div>
+    </div>
+
+    <!-- Чат между пользователями -->
+    <div id="chatPage" class="hidden">
+        <div class="nav">
+            <button id="backToProfileFromChatBtn">← Назад в профиль</button>
+        </div>
+        
+        <h1>Чат с пользователями</h1>
+        
+        <div class="chat-container">
+            <div class="users-list">
+                <h3>Пользователи</h3>
+                <div id="chatUsersList"></div>
+            </div>
+            
+            <div class="chat-area">
+                <div id="chatMessages" class="chat-messages"></div>
+                <div class="chat-input">
+                    <textarea id="chatMessageInput" placeholder="Введите сообщение..."></textarea>
+                    <button id="sendMessageBtn">Отправить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список всех пользователей -->
+    <div id="usersPage" class="hidden">
+        <div class="nav">
+            <button id="backToProfileFromUsersBtn">← Назад в профиль</button>
+        </div>
+        
+        <h1>Список пользователей</h1>
+        
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Имя пользователя</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <!-- Список пользователей будет загружен здесь -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Инициализация базы данных
+        const dbName = "UserDashboardDB";
+        const dbVersion = 4; // Увеличиваем версию для добавления таблицы сообщений
+        
+        let db;
+        const request = indexedDB.open(dbName, dbVersion);
+
+        // Создание структуры базы данных
+        request.onupgradeneeded = function(event) {
+            const db = event.target.result;
+            
+            // Таблица Users
+            const usersStore = db.createObjectStore("Users", { keyPath: "id" });
+            usersStore.createIndex("email", "email", { unique: true });
+            usersStore.createIndex("telephone", "telephone", { unique: true });
+            usersStore.createIndex("username", "username", { unique: true });
+            
+            // Таблица Сферы
+            const spheresStore = db.createObjectStore("Spheres", { keyPath: "id" });
+            spheresStore.createIndex("name", "name", { unique: true });
+            
+            // Таблица Technology
+            const techStore = db.createObjectStore("Technology", { keyPath: "id" });
+            techStore.createIndex("name", "name", { unique: true });
+            techStore.createIndex("sphereId", "sphereId");
+            
+            // Таблица Messages для чата
+            const messagesStore = db.createObjectStore("Messages", { keyPath: "id", autoIncrement: true });
+            messagesStore.createIndex("senderId", "senderId");
+            messagesStore.createIndex("receiverId", "receiverId");
+            messagesStore.createIndex("timestamp", "timestamp");
+            
+            // Добавляем тестовые данные
+            const spheres = [
+                { id: 1, name: "Веб-разработка" },
+                { id: 2, name: "Мобильная разработка" },
+                { id: 3, name: "Data Science" }
+            ];
+            
+            const technologies = [
+                { id: 1, name: "JavaScript", sphereId: 1 },
+                { id: 2, name: "Python", sphereId: 1 },
+                { id: 3, name: "Kotlin", sphereId: 2 },
+                { id: 4, name: "Swift", sphereId: 2 },
+                { id: 5, name: "SQL", sphereId: 3 },
+                { id: 6, name: "TensorFlow", sphereId: 3 }
+            ];
+            
+            const testUsers = [
+                { id: 1, username: "Иван Иванов", email: "ivan@example.com", password: "123456", telephone: "+79123456789", technologies: [1, 2] },
+                { id: 2, username: "Петр Петров", email: "petr@example.com", password: "123456", telephone: "+79234567890", technologies: [3, 4] },
+                { id: 3, username: "Сергей Сергеев", email: "sergey@example.com", password: "123456", telephone: "+79345678901", technologies: [5, 6] }
+            ];
+            
+            spheres.forEach(sphere => {
+                spheresStore.add(sphere);
+            });
+            
+            technologies.forEach(tech => {
+                techStore.add(tech);
+            });
+            
+            testUsers.forEach(user => {
+                usersStore.add(user);
+            });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            console.log("База данных успешно открыта");
+            
+            // Проверяем авторизацию при загрузке
+            checkAuth();
+            
+            // Навигация между формами
+            document.getElementById("showLogin").addEventListener("click", showLoginForm);
+            document.getElementById("showRegister").addEventListener("click", showRegisterForm);
+            
+            // Обработчики форм
+            document.getElementById("loginForm").addEventListener("submit", handleLogin);
+            document.getElementById("registrationForm").addEventListener("submit", handleRegister);
+            document.getElementById("updateProfileForm").addEventListener("submit", handleProfileUpdate);
+            
+            // Кнопки личного кабинета
+            document.getElementById("editProfileBtn").addEventListener("click", showEditForm);
+            document.getElementById("cancelEditBtn").addEventListener("click", hideEditForm);
+            document.getElementById("openMenuBtn").addEventListener("click", showMenu);
+            document.getElementById("openChatBtn").addEventListener("click", showChatPage);
+            document.getElementById("showUsersBtn").addEventListener("click", showUsersPage);
+            
+            // Кнопки навигации
+            document.getElementById("backToProfileBtn").addEventListener("click", showDashboard);
+            document.getElementById("backToProfileFromMenuBtn").addEventListener("click", showDashboard);
+            document.getElementById("backToProfileFromChatBtn").addEventListener("click", showDashboard);
+            document.getElementById("backToProfileFromUsersBtn").addEventListener("click", showDashboard);
+            document.getElementById("logoutBtn").addEventListener("click", logout);
+            
+            // Обработчик сохранения технологий
+            document.getElementById("saveTech").addEventListener("click", saveTechnologies);
+            
+            // Обработчики чата
+            document.getElementById("sendMessageBtn").addEventListener("click", sendMessage);
+            document.getElementById("chatMessageInput").addEventListener("keypress", function(e) {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Кнопки меню возможностей (заглушки)
+            document.getElementById("feature1Btn").addEventListener("click", () => alert("Функция 1"));
+            document.getElementById("feature2Btn").addEventListener("click", () => alert("Функция 2"));
+            document.getElementById("feature3Btn").addEventListener("click", () => alert("Функция 3"));
+        };
+
+        request.onerror = function(event) {
+            console.error("Ошибка при открытии базы данных:", event.target.error);
+            showMessage("Ошибка при работе с базой данных", "error", "loginMessage");
+        };
+        
+        // ========== Функции для работы с UI ==========
+        
+        function showLoginForm() {
+            document.getElementById("loginFormContainer").classList.remove("hidden");
+            document.getElementById("registerFormContainer").classList.add("hidden");
+        }
+        
+        function showRegisterForm() {
+            document.getElementById("loginFormContainer").classList.add("hidden");
+            document.getElementById("registerFormContainer").classList.remove("hidden");
+        }
+        
+        function showDashboard() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("dashboard").classList.remove("hidden");
+            document.getElementById("techPage").classList.add("hidden");
+            document.getElementById("menuPage").classList.add("hidden");
+            document.getElementById("chatPage").classList.add("hidden");
+            document.getElementById("usersPage").classList.add("hidden");
+            document.getElementById("editProfileForm").classList.add("hidden");
+            
+            loadUserProfile();
+        }
+        
+        function showTechPage() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+            document.getElementById("techPage").classList.remove("hidden");
+            document.getElementById("menuPage").classList.add("hidden");
+            document.getElementById("chatPage").classList.add("hidden");
+            document.getElementById("usersPage").classList.add("hidden");
+            
+            loadTechnologies();
+        }
+        
+        function showMenu() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+            document.getElementById("techPage").classList.add("hidden");
+            document.getElementById("menuPage").classList.remove("hidden");
+            document.getElementById("chatPage").classList.add("hidden");
+            document.getElementById("usersPage").classList.add("hidden");
+        }
+        
+        function showChatPage() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+            document.getElementById("techPage").classList.add("hidden");
+            document.getElementById("menuPage").classList.add("hidden");
+            document.getElementById("chatPage").classList.remove("hidden");
+            document.getElementById("usersPage").classList.add("hidden");
+            
+            loadChatUsers();
+            // Сбрасываем выбранного пользователя в чате
+            currentChatUserId = null;
+            document.getElementById("chatMessages").innerHTML = "";
+        }
+        
+        function showUsersPage() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+            document.getElementById("techPage").classList.add("hidden");
+            document.getElementById("menuPage").classList.add("hidden");
+            document.getElementById("chatPage").classList.add("hidden");
+            document.getElementById("usersPage").classList.remove("hidden");
+            
+            loadAllUsers();
+        }
+        
+        function showEditForm() {
+            document.getElementById("editProfileForm").classList.remove("hidden");
+            loadUserDataToForm();
+        }
+        
+        function hideEditForm() {
+            document.getElementById("editProfileForm").classList.add("hidden");
+        }
+        
+        // ========== Основные функции ==========
+        
+        function checkAuth() {
+            const userId = localStorage.getItem("currentUserId");
+            
+            if (userId) {
+                // Пользователь авторизован
+                document.getElementById("authSection").classList.add("hidden");
+                showDashboard();
+            } else {
+                // Показываем форму входа
+                document.getElementById("authSection").classList.remove("hidden");
+                showLoginForm();
+            }
+        }
+        
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            
+            loginUser(email, password);
+        }
+        
+        function handleRegister(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById("username").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+            const telephone = document.getElementById("telephone").value;
+            
+            if (password !== confirmPassword) {
+                showMessage("Пароли не совпадают", "error", "registerMessage");
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage("Пароль должен содержать минимум 6 символов", "error", "registerMessage");
+                return;
+            }
+            
+            registerUser(username, email, password, telephone);
+        }
+        
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            
+            const userId = localStorage.getItem("currentUserId");
+            const username = document.getElementById("editUsername").value;
+            const email = document.getElementById("editEmail").value;
+            const phone = document.getElementById("editPhone").value;
+            const password = document.getElementById("editPassword").value;
+            
+            updateUserProfile(userId, username, email, phone, password);
+        }
+        
+        function loginUser(email, password) {
+            const transaction = db.transaction(["Users"], "readonly");
+            const usersStore = transaction.objectStore("Users");
+            const emailIndex = usersStore.index("email");
+            
+            const request = emailIndex.get(email);
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                
+                if (!user) {
+                    showMessage("Пользователь с таким email не найден", "error", "loginMessage");
+                    return;
+                }
+                
+                // В реальном приложении нужно сравнивать хеши паролей!
+                if (user.password !== password) {
+                    showMessage("Неверный пароль", "error", "loginMessage");
+                    return;
+                }
+                
+                // Авторизация успешна
+                localStorage.setItem("currentUserId", user.id);
+                showMessage("Вход выполнен успешно!", "success", "loginMessage");
+                
+                // Показываем личный кабинет
+                setTimeout(() => {
+                    showDashboard();
+                }, 1000);
+            };
+            
+            request.onerror = function(event) {
+                showMessage("Ошибка при входе: " + event.target.error, "error", "loginMessage");
+            };
+        }
+        
+        function registerUser(username, email, password, telephone) {
+            const transaction = db.transaction(["Users"], "readwrite");
+            const usersStore = transaction.objectStore("Users");
+            
+            const newUser = {
+                id: Date.now(),
+                username: username,
+                email: email,
+                password: password, // В реальном приложении пароль должен быть хеширован!
+                telephone: telephone,
+                technologies: []
+            };
+            
+            const request = usersStore.add(newUser);
+            
+            request.onsuccess = function() {
+                showMessage("Регистрация прошла успешно!", "success", "registerMessage");
+                localStorage.setItem("currentUserId", newUser.id);
+                
+                // Показываем страницу выбора технологий
+                setTimeout(() => {
+                    showTechPage();
+                }, 1000);
+            };
+            
+            request.onerror = function(event) {
+                if (event.target.error.name === "ConstraintError") {
+                    showMessage("Пользователь с таким email, телефоном или именем уже существует!", "error", "registerMessage");
+                } else {
+                    showMessage("Ошибка при регистрации: " + event.target.error, "error", "registerMessage");
+                }
+            };
+        }
+        
+        function loadUserProfile() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) return;
+            
+            const transaction = db.transaction(["Users"], "readonly");
+            const usersStore = transaction.objectStore("Users");
+            
+            const request = usersStore.get(parseInt(userId));
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user) {
+                    // Заполняем профиль
+                    document.getElementById("profileUsername").textContent = user.username;
+                    document.getElementById("profileEmail").textContent = user.email;
+                    document.getElementById("profilePhone").textContent = user.telephone;
+                    
+                    // Отображаем технологии
+                    const techContainer = document.getElementById("profileTech");
+                    techContainer.innerHTML = "";
+                    
+                    if (user.technologies && user.technologies.length > 0) {
+                        // Загружаем названия технологий
+                        const techTransaction = db.transaction(["Technology"], "readonly");
+                        const techStore = techTransaction.objectStore("Technology");
+                        
+                        user.technologies.forEach(techId => {
+                            const techRequest = techStore.get(parseInt(techId));
+                            techRequest.onsuccess = function() {
+                                const tech = techRequest.result;
+                                if (tech) {
+                                    const techElement = document.createElement("div");
+                                    techElement.className = "tech-item";
+                                    techElement.textContent = tech.name;
+                                    techContainer.appendChild(techElement);
+                                }
+                            };
+                        });
+                    } else {
+                        techContainer.innerHTML = "<em>Технологии не выбраны</em>";
+                    }
+                }
+            };
+        }
+        
+        function loadUserDataToForm() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) return;
+            
+            const transaction = db.transaction(["Users"], "readonly");
+            const usersStore = transaction.objectStore("Users");
+            
+            const request = usersStore.get(parseInt(userId));
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user) {
+                    document.getElementById("editUsername").value = user.username;
+                    document.getElementById("editEmail").value = user.email;
+                    document.getElementById("editPhone").value = user.telephone;
+                    document.getElementById("editPassword").value = "";
+                }
+            };
+        }
+        
+        function updateUserProfile(userId, username, email, phone, newPassword) {
+            const transaction = db.transaction(["Users"], "readwrite");
+            const usersStore = transaction.objectStore("Users");
+            
+            const request = usersStore.get(parseInt(userId));
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user) {
+                    // Обновляем данные
+                    user.username = username;
+                    user.email = email;
+                    user.telephone = phone;
+                    
+                    // Обновляем пароль, если он указан
+                    if (newPassword && newPassword.length >= 6) {
+                        user.password = newPassword;
+                    }
+                    
+                    // Сохраняем изменения
+                    const updateRequest = usersStore.put(user);
+                    
+                    updateRequest.onsuccess = function() {
+                        showMessage("Профиль успешно обновлен", "success", "editMessage");
+                        loadUserProfile();
+                        hideEditForm();
+                    };
+                    
+                    updateRequest.onerror = function(event) {
+                        showMessage("Ошибка при обновлении: " + event.target.error, "error", "editMessage");
+                    };
+                }
+            };
+        }
+        
+        function loadTechnologies() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) return;
+            
+            // Сначала получаем текущие технологии пользователя
+            const userTransaction = db.transaction(["Users"], "readonly");
+            const usersStore = userTransaction.objectStore("Users");
+            
+            const userRequest = usersStore.get(parseInt(userId));
+            
+            userRequest.onsuccess = function() {
+                const user = userRequest.result;
+                const userTechs = user ? user.technologies || [] : [];
+                
+                // Затем загружаем все доступные технологии
+                const techTransaction = db.transaction(["Technology", "Spheres"], "readonly");
+                const techStore = techTransaction.objectStore("Technology");
+                const spheresStore = techTransaction.objectStore("Spheres");
+                
+                const techRequest = techStore.getAll();
+                const spheresRequest = spheresStore.getAll();
+                
+                Promise.all([
+                    new Promise(resolve => {
+                        techRequest.onsuccess = () => resolve(techRequest.result);
+                    }),
+                    new Promise(resolve => {
+                        spheresRequest.onsuccess = () => resolve(spheresRequest.result);
+                    })
+                ]).then(([technologies, spheres]) => {
+                    const techBySphere = {};
+                    
+                    technologies.forEach(tech => {
+                        if (!techBySphere[tech.sphereId]) {
+                            techBySphere[tech.sphereId] = [];
+                        }
+                        techBySphere[tech.sphereId].push(tech);
+                    });
+                    
+                    let html = '';
+                    spheres.forEach(sphere => {
+                        if (techBySphere[sphere.id]) {
+                            html += `<h3>${sphere.name}</h3>`;
+                            techBySphere[sphere.id].forEach(tech => {
+                                const isChecked = userTechs.includes(tech.id.toString());
+                                html += `
+                                    <div>
+                                        <input type="checkbox" id="tech_${tech.id}" name="tech" value="${tech.id}" ${isChecked ? 'checked' : ''}>
+                                        <label for="tech_${tech.id}">${tech.name}</label>
+                                    </div>
+                                `;
+                            });
+                        }
+                    });
+                    
+                    document.getElementById("technologies").innerHTML = html;
+                });
+            };
+        }
+        
+        function saveTechnologies() {
+            const selectedTechs = Array.from(document.querySelectorAll('input[name="tech"]:checked')).map(el => el.value);
+            const userId = localStorage.getItem("currentUserId");
+            
+            if (!userId) {
+                showMessage("Ошибка авторизации", "error", "techMessage");
+                return;
+            }
+            
+            const transaction = db.transaction(["Users"], "readwrite");
+            const usersStore = transaction.objectStore("Users");
+            
+            const request = usersStore.get(parseInt(userId));
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user) {
+                    user.technologies = selectedTechs;
+                    
+                    const updateRequest = usersStore.put(user);
+                    
+                    updateRequest.onsuccess = function() {
+                        showMessage("Технологии успешно сохранены!", "success", "techMessage");
+                        setTimeout(() => {
+                            showDashboard();
+                        }, 1000);
+                    };
+                    
+                    updateRequest.onerror = function(event) {
+                        showMessage("Ошибка при сохранении: " + event.target.error, "error", "techMessage");
+                    };
+                }
+            };
+        }
+        
+        // ========== Функции для работы с чатом ==========
+        
+        let currentChatUserId = null;
+        
+        function loadChatUsers() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) return;
+            
+            const transaction = db.transaction(["Users"], "readonly");
+            const usersStore = transaction.objectStore("Users");
+            const request = usersStore.getAll();
+            
+            request.onsuccess = function() {
+                const users = request.result.filter(user => user.id.toString() !== userId);
+                const usersList = document.getElementById("chatUsersList");
+                usersList.innerHTML = "";
+                
+                if (users.length === 0) {
+                    usersList.innerHTML = "<p>Нет других пользователей</p>";
+                    return;
+                }
+                
+                users.forEach(user => {
+                    const userElement = document.createElement("div");
+                    userElement.className = "user-item";
+                    userElement.textContent = user.username;
+                    userElement.dataset.userId = user.id;
+                    
+                    userElement.addEventListener("click", function() {
+                        // Удаляем активный класс у всех элементов
+                        document.querySelectorAll(".user-item").forEach(item => {
+                            item.classList.remove("active");
+                        });
+                        
+                        // Добавляем активный класс текущему элементу
+                        this.classList.add("active");
+                        
+                        // Загружаем сообщения с выбранным пользователем
+                        currentChatUserId = this.dataset.userId;
+                        loadChatMessages(currentChatUserId);
+                    });
+                    
+                    usersList.appendChild(userElement);
+                });
+            };
+        }
+        
+        function loadChatMessages(receiverId) {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId || !receiverId) return;
+            
+            const transaction = db.transaction(["Messages"], "readonly");
+            const messagesStore = transaction.objectStore("Messages");
+            
+            // Получаем все сообщения между текущим пользователем и выбранным
+            const index = messagesStore.index("timestamp");
+            const range = IDBKeyRange.bound(0, Infinity);
+            const request = index.openCursor(range);
+            
+            const messages = [];
+            
+            request.onsuccess = function(event) {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const message = cursor.value;
+                    if ((message.senderId.toString() === userId && message.receiverId.toString() === receiverId) ||
+                        (message.senderId.toString() === receiverId && message.receiverId.toString() === userId)) {
+                        messages.push(message);
+                    }
+                    cursor.continue();
+                } else {
+                    // Сортируем сообщения по времени
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
+                    
+                    // Отображаем сообщения
+                    displayMessages(messages, userId);
+                }
+            };
+        }
+        
+        function displayMessages(messages, currentUserId) {
+            const chatMessages = document.getElementById("chatMessages");
+            chatMessages.innerHTML = "";
+            
+            if (messages.length === 0) {
+                chatMessages.innerHTML = "<p>Нет сообщений. Начните общение!</p>";
+                return;
+            }
+            
+            messages.forEach(message => {
+                const messageElement = document.createElement("div");
+                messageElement.className = `message-item ${message.senderId.toString() === currentUserId ? 'sent' : 'received'}`;
+                
+                // Получаем имя отправителя
+                getUserName(message.senderId).then(senderName => {
+                    const time = new Date(message.timestamp).toLocaleTimeString();
+                    
+                    messageElement.innerHTML = `
+                        <div class="message-sender">${senderName}</div>
+                        <div>${message.text}</div>
+                        <div class="message-time">${time}</div>
+                    `;
+                });
+                
+                chatMessages.appendChild(messageElement);
+            });
+            
+            // Прокручиваем вниз
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function sendMessage() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId || !currentChatUserId) return;
+            
+            const messageInput = document.getElementById("chatMessageInput");
+            const messageText = messageInput.value.trim();
+            
+            if (!messageText) return;
+            
+            const transaction = db.transaction(["Messages"], "readwrite");
+            const messagesStore = transaction.objectStore("Messages");
+            
+            const newMessage = {
+                senderId: parseInt(userId),
+                receiverId: parseInt(currentChatUserId),
+                text: messageText,
+                timestamp: Date.now()
+            };
+            
+            const request = messagesStore.add(newMessage);
+            
+            request.onsuccess = function() {
+                // Очищаем поле ввода
+                messageInput.value = "";
+                
+                // Обновляем чат
+                loadChatMessages(currentChatUserId);
+            };
+            
+            request.onerror = function(event) {
+                console.error("Ошибка при отправке сообщения:", event.target.error);
+            };
+        }
+        
+        function getUserName(userId) {
+            return new Promise((resolve) => {
+                const transaction = db.transaction(["Users"], "readonly");
+                const usersStore = transaction.objectStore("Users");
+                const request = usersStore.get(parseInt(userId));
+                
+                request.onsuccess = function() {
+                    const user = request.result;
+                    resolve(user ? user.username : "Неизвестный пользователь");
+                };
+                
+                request.onerror = function() {
+                    resolve("Неизвестный пользователь");
+                };
+            });
+        }
+        
+        // ========== Функции для работы со списком пользователей ==========
+        
+        function loadAllUsers() {
+            const transaction = db.transaction(["Users"], "readonly");
+            const usersStore = transaction.objectStore("Users");
+            const request = usersStore.getAll();
+            
+            request.onsuccess = function() {
+                const users = request.result;
+                const tableBody = document.getElementById("usersTableBody");
+                tableBody.innerHTML = "";
+                
+                if (users.length === 0) {
+                    tableBody.innerHTML = "<tr><td colspan='3'>Нет зарегистрированных пользователей</td></tr>";
+                    return;
+                }
+                
+                users.forEach(user => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${user.telephone}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            };
+        }
+        
+        function logout() {
+            localStorage.removeItem("currentUserId");
+            document.getElementById("authSection").classList.remove("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+            showLoginForm();
+        }
+        
+        function showMessage(text, type, elementId) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+        }
+    </script>
+</body>
+</html>

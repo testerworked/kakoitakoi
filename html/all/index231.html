@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; box-sizing: border-box; margin-bottom: 10px; }
+        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #45a049; }
+        .message { margin: 15px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #dff0d8; color: #3c763d; }
+        .error { background: #f2dede; color: #a94442; }
+        .hidden { display: none; }
+        .nav { margin-bottom: 20px; }
+        .nav button { background: #2196F3; }
+        .nav button:hover { background: #0b7dda; }
+        .profile-info { background: #f9f9f9; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .profile-field { margin-bottom: 15px; }
+        .profile-field label { font-weight: normal; color: #666; }
+        .profile-field span { display: block; padding: 5px 0; }
+        .edit-form { background: #f0f8ff; padding: 20px; border-radius: 5px; margin-top: 20px; }
+        .tech-list { margin-top: 10px; }
+        .tech-item { display: inline-block; background: #e1f5fe; padding: 5px 10px; margin: 0 5px 5px 0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <!-- Формы входа/регистрации -->
+    <div id="authSection">
+        <div class="nav">
+            <button id="showLogin">Вход</button>
+            <button id="showRegister">Регистрация</button>
+        </div>
+
+        <div id="loginFormContainer">
+            <h1>Вход в систему</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Пароль:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit">Войти</button>
+            </form>
+            <div id="loginMessage" class="message"></div>
+        </div>
+
+        <div id="registerFormContainer" class="hidden">
+            <h1>Регистрация пользователя</h1>
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label for="username">Имя пользователя:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль:</label>
+                    <input type="password" id="password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Подтвердите пароль:</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="telephone">Номер телефона:</label>
+                    <input type="tel" id="telephone" required>
+                </div>
+                <button type="submit">Зарегистрироваться</button>
+            </form>
+            <div id="registerMessage" class="message"></div>
+        </div>
+    </div>
+
+    <!-- Личный кабинет -->
+    <div id="dashboard" class="hidden">
+        <div class="nav">
+            <button id="logoutBtn">Выйти</button>
+        </div>
+        
+        <h1>Личный кабинет</h1>
+        
+        <div class="profile-info">
+            <h2>Профиль пользователя</h2>
+            <div class="profile-field">
+                <label>Имя пользователя:</label>
+                <span id="profileUsername"></span>
+            </div>
+            <div class="profile-field">
+                <label>Email:</label>
+                <span id="profileEmail"></span>
+            </div>
+            <div class="profile-field">
+                <label>Телефон:</label>
+                <span id="profilePhone"></span>
+            </div>
+            <div class="profile-field">
+                <label>Выбранные технологии:</label>
+                <div id="profileTech" class="tech-list"></div>
+            </div>
+            
+            <button id="editProfileBtn">Редактировать профиль</button>
+            <button id="openMenuBtn">Меню возможностей</button>
+        </div>
+        
+        <!-- Форма редактирования -->
+        <div id="editProfileForm" class="edit-form hidden">
+            <h2>Редактирование профиля</h2>
+            <form id="updateProfileForm">
+                <div class="form-group">
+                    <label for="editUsername">Имя пользователя:</label>
+                    <input type="text" id="editUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email:</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">Телефон:</label>
+                    <input type="tel" id="editPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPassword">Новый пароль (оставьте пустым, если не хотите менять):</label>
+                    <input type="password" id="editPassword">
+                </div>
+                <button type="submit">Сохранить изменения</button>
+                <button type="button" id="cancelEditBtn">Отмена</button>
+            </form>
+            <div id="editMessage" class="message"></div>
+        </div>
+    </div>
+
+    <!-- Страница выбора технологий -->
+    <div id="techPage" class="hidden">
+        <div class="nav">
+            <button id="backToProfileBtn">← Назад в профиль</button>
+        </div>
+        
+        <h1>Выберите технологии</h1>
+        <div id="technologies"></div>
+        <button id="saveTech">Сохранить выбор</button>
+        <div id="techMessage" class="message"></div>
+    </div>
+
+    <!-- Меню возможностей -->
+    <div id="menuPage" class="hidden">
+        <div class="nav">
+            <button id="backToProfileFromMenuBtn">← Назад в профиль</button>
+        </div>
+        
+        <h1>Меню возможностей</h1>
+        <div class="profile-info">
+            <h2>Доступные функции</h2>
+            <button id="feature1Btn">Функция 1</button>
+            <button id="feature2Btn">Функция 2</button>
+            <button id="feature3Btn">Функция 3</button>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация базы данных
+        const dbName = "UserDashboardDB";
+        const dbVersion = 3;
+        
+        let db;
+        const request = indexedDB.open(dbName, dbVersion);
+
+        // Создание структуры базы данных
+        request.onupgradeneeded = function(event) {
+            const db = event.target.result;
+            
+            // Таблица Users
+            const usersStore = db.createObjectStore("Users", { keyPath: "id" });
+            usersStore.createIndex("email", "email", { unique: true });
+            usersStore.createIndex("telephone", "telephone", { unique: true });
+            usersStore.createIndex("username", "username", { unique: true });
+            
+            // Таблица Сферы
+            const spheresStore = db.createObjectStore("Spheres", { keyPath: "id" });
+            spheresStore.createIndex("name", "name", { unique: true });
+            
+            // Таблица Technology
+            const techStore = db.createObjectStore("Technology", { keyPath: "id" });
+            techStore.createIndex("name", "name", { unique: true });
+            techStore.createIndex("sphereId", "sphereId");
+            
+            // Добавляем тестовые данные
+            const spheres = [
+                { id: 1, name: "Веб-разработка" },
+                { id: 2, name: "Мобильная разработка" },
+                { id: 3, name: "Data Science" }
+            ];
+            
+            const technologies = [
+                { id: 1, name: "JavaScript", sphereId: 1 },
+                { id: 2, name: "Python", sphereId: 1 },
+                { id: 3, name: "Kotlin", sphereId: 2 },
+                { id: 4, name: "Swift", sphereId: 2 },
+                { id: 5, name: "SQL", sphereId: 3 },
+                { id: 6, name: "TensorFlow", sphereId: 3 }
+            ];
+            
+            spheres.forEach(sphere => {
+                spheresStore.add(sphere);
+            });
+            
+            technologies.forEach(tech => {
+                techStore.add(tech);
+            });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            console.log("База данных успешно открыта");
+            
+            // Проверяем авторизацию при загрузке
+            checkAuth();
+            
+            // Навигация между формами
+            document.getElementById("showLogin").addEventListener("click", showLoginForm);
+            document.getElementById("showRegister").addEventListener("click", showRegisterForm);
+            
+            // Обработчики форм
+            document.getElementById("loginForm").addEventListener("submit", handleLogin);
+            document.getElementById("registrationForm").addEventListener("submit", handleRegister);
+            document.getElementById("updateProfileForm").addEventListener("submit", handleProfileUpdate);
+            
+            // Кнопки личного кабинета
+            document.getElementById("editProfileBtn").addEventListener("click", showEditForm);
+            document.getElementById("cancelEditBtn").addEventListener("click", hideEditForm);
+            document.getElementById("openMenuBtn").addEventListener("click", showMenu);
+            
+            // Кнопки навигации
+            document.getElementById("backToProfileBtn").addEventListener("click", showDashboard);
+            document.getElementById("backToProfileFromMenuBtn").addEventListener("click", showDashboard);
+            document.getElementById("logoutBtn").addEventListener("click", logout);
+            
+            // Обработчик сохранения технологий
+            document.getElementById("saveTech").addEventListener("click", saveTechnologies);
+            
+            // Кнопки меню возможностей (заглушки)
+            document.getElementById("feature1Btn").addEventListener("click", () => alert("Функция 1"));
+            document.getElementById("feature2Btn").addEventListener("click", () => alert("Функция 2"));
+            document.getElementById("feature3Btn").addEventListener("click", () => alert("Функция 3"));
+        };
+
+        request.onerror = function(event) {
+            console.error("Ошибка при открытии базы данных:", event.target.error);
+            showMessage("Ошибка при работе с базой данных", "error", "loginMessage");
+        };
+        
+        // ========== Функции для работы с UI ==========
+        
+        function showLoginForm() {
+            document.getElementById("loginFormContainer").classList.remove("hidden");
+            document.getElementById("registerFormContainer").classList.add("hidden");
+        }
+        
+        function showRegisterForm() {
+            document.getElementById("loginFormContainer").classList.add("hidden");
+            document.getElementById("registerFormContainer").classList.remove("hidden");
+        }
+        
+        function showDashboard() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("dashboard").classList.remove("hidden");
+            document.getElementById("techPage").classList.add("hidden");
+            document.getElementById("menuPage").classList.add("hidden");
+            document.getElementById("editProfileForm").classList.add("hidden");
+            
+            loadUserProfile();
+        }
+        
+        function showTechPage() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+            document.getElementById("techPage").classList.remove("hidden");
+            document.getElementById("menuPage").classList.add("hidden");
+            
+            loadTechnologies();
+        }
+        
+        function showMenu() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+            document.getElementById("techPage").classList.add("hidden");
+            document.getElementById("menuPage").classList.remove("hidden");
+        }
+        
+        function showEditForm() {
+            document.getElementById("editProfileForm").classList.remove("hidden");
+            loadUserDataToForm();
+        }
+        
+        function hideEditForm() {
+            document.getElementById("editProfileForm").classList.add("hidden");
+        }
+        
+        // ========== Основные функции ==========
+        
+        function checkAuth() {
+            const userId = localStorage.getItem("currentUserId");
+            
+            if (userId) {
+                // Пользователь авторизован
+                document.getElementById("authSection").classList.add("hidden");
+                showDashboard();
+            } else {
+                // Показываем форму входа
+                document.getElementById("authSection").classList.remove("hidden");
+                showLoginForm();
+            }
+        }
+        
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            
+            loginUser(email, password);
+        }
+        
+        function handleRegister(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById("username").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+            const telephone = document.getElementById("telephone").value;
+            
+            if (password !== confirmPassword) {
+                showMessage("Пароли не совпадают", "error", "registerMessage");
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage("Пароль должен содержать минимум 6 символов", "error", "registerMessage");
+                return;
+            }
+            
+            registerUser(username, email, password, telephone);
+        }
+        
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            
+            const userId = localStorage.getItem("currentUserId");
+            const username = document.getElementById("editUsername").value;
+            const email = document.getElementById("editEmail").value;
+            const phone = document.getElementById("editPhone").value;
+            const password = document.getElementById("editPassword").value;
+            
+            updateUserProfile(userId, username, email, phone, password);
+        }
+        
+        function loginUser(email, password) {
+            const transaction = db.transaction(["Users"], "readonly");
+            const usersStore = transaction.objectStore("Users");
+            const emailIndex = usersStore.index("email");
+            
+            const request = emailIndex.get(email);
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                
+                if (!user) {
+                    showMessage("Пользователь с таким email не найден", "error", "loginMessage");
+                    return;
+                }
+                
+                // В реальном приложении нужно сравнивать хеши паролей!
+                if (user.password !== password) {
+                    showMessage("Неверный пароль", "error", "loginMessage");
+                    return;
+                }
+                
+                // Авторизация успешна
+                localStorage.setItem("currentUserId", user.id);
+                showMessage("Вход выполнен успешно!", "success", "loginMessage");
+                
+                // Показываем личный кабинет
+                setTimeout(() => {
+                    showDashboard();
+                }, 1000);
+            };
+            
+            request.onerror = function(event) {
+                showMessage("Ошибка при входе: " + event.target.error, "error", "loginMessage");
+            };
+        }
+        
+        function registerUser(username, email, password, telephone) {
+            const transaction = db.transaction(["Users"], "readwrite");
+            const usersStore = transaction.objectStore("Users");
+            
+            const newUser = {
+                id: Date.now(),
+                username: username,
+                email: email,
+                password: password, // В реальном приложении пароль должен быть хеширован!
+                telephone: telephone,
+                technologies: []
+            };
+            
+            const request = usersStore.add(newUser);
+            
+            request.onsuccess = function() {
+                showMessage("Регистрация прошла успешно!", "success", "registerMessage");
+                localStorage.setItem("currentUserId", newUser.id);
+                
+                // Показываем страницу выбора технологий
+                setTimeout(() => {
+                    showTechPage();
+                }, 1000);
+            };
+            
+            request.onerror = function(event) {
+                if (event.target.error.name === "ConstraintError") {
+                    showMessage("Пользователь с таким email, телефоном или именем уже существует!", "error", "registerMessage");
+                } else {
+                    showMessage("Ошибка при регистрации: " + event.target.error, "error", "registerMessage");
+                }
+            };
+        }
+        
+        function loadUserProfile() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) return;
+            
+            const transaction = db.transaction(["Users"], "readonly");
+            const usersStore = transaction.objectStore("Users");
+            
+            const request = usersStore.get(parseInt(userId));
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user) {
+                    // Заполняем профиль
+                    document.getElementById("profileUsername").textContent = user.username;
+                    document.getElementById("profileEmail").textContent = user.email;
+                    document.getElementById("profilePhone").textContent = user.telephone;
+                    
+                    // Отображаем технологии
+                    const techContainer = document.getElementById("profileTech");
+                    techContainer.innerHTML = "";
+                    
+                    if (user.technologies && user.technologies.length > 0) {
+                        // Загружаем названия технологий
+                        const techTransaction = db.transaction(["Technology"], "readonly");
+                        const techStore = techTransaction.objectStore("Technology");
+                        
+                        user.technologies.forEach(techId => {
+                            const techRequest = techStore.get(parseInt(techId));
+                            techRequest.onsuccess = function() {
+                                const tech = techRequest.result;
+                                if (tech) {
+                                    const techElement = document.createElement("div");
+                                    techElement.className = "tech-item";
+                                    techElement.textContent = tech.name;
+                                    techContainer.appendChild(techElement);
+                                }
+                            };
+                        });
+                    } else {
+                        techContainer.innerHTML = "<em>Технологии не выбраны</em>";
+                    }
+                }
+            };
+        }
+        
+        function loadUserDataToForm() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) return;
+            
+            const transaction = db.transaction(["Users"], "readonly");
+            const usersStore = transaction.objectStore("Users");
+            
+            const request = usersStore.get(parseInt(userId));
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user) {
+                    document.getElementById("editUsername").value = user.username;
+                    document.getElementById("editEmail").value = user.email;
+                    document.getElementById("editPhone").value = user.telephone;
+                    document.getElementById("editPassword").value = "";
+                }
+            };
+        }
+        
+        function updateUserProfile(userId, username, email, phone, newPassword) {
+            const transaction = db.transaction(["Users"], "readwrite");
+            const usersStore = transaction.objectStore("Users");
+            
+            const request = usersStore.get(parseInt(userId));
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user) {
+                    // Обновляем данные
+                    user.username = username;
+                    user.email = email;
+                    user.telephone = phone;
+                    
+                    // Обновляем пароль, если он указан
+                    if (newPassword && newPassword.length >= 6) {
+                        user.password = newPassword;
+                    }
+                    
+                    // Сохраняем изменения
+                    const updateRequest = usersStore.put(user);
+                    
+                    updateRequest.onsuccess = function() {
+                        showMessage("Профиль успешно обновлен", "success", "editMessage");
+                        loadUserProfile();
+                        hideEditForm();
+                    };
+                    
+                    updateRequest.onerror = function(event) {
+                        showMessage("Ошибка при обновлении: " + event.target.error, "error", "editMessage");
+                    };
+                }
+            };
+        }
+        
+        function loadTechnologies() {
+            const userId = localStorage.getItem("currentUserId");
+            if (!userId) return;
+            
+            // Сначала получаем текущие технологии пользователя
+            const userTransaction = db.transaction(["Users"], "readonly");
+            const usersStore = userTransaction.objectStore("Users");
+            
+            const userRequest = usersStore.get(parseInt(userId));
+            
+            userRequest.onsuccess = function() {
+                const user = userRequest.result;
+                const userTechs = user ? user.technologies || [] : [];
+                
+                // Затем загружаем все доступные технологии
+                const techTransaction = db.transaction(["Technology", "Spheres"], "readonly");
+                const techStore = techTransaction.objectStore("Technology");
+                const spheresStore = techTransaction.objectStore("Spheres");
+                
+                const techRequest = techStore.getAll();
+                const spheresRequest = spheresStore.getAll();
+                
+                Promise.all([
+                    new Promise(resolve => {
+                        techRequest.onsuccess = () => resolve(techRequest.result);
+                    }),
+                    new Promise(resolve => {
+                        spheresRequest.onsuccess = () => resolve(spheresRequest.result);
+                    })
+                ]).then(([technologies, spheres]) => {
+                    const techBySphere = {};
+                    
+                    technologies.forEach(tech => {
+                        if (!techBySphere[tech.sphereId]) {
+                            techBySphere[tech.sphereId] = [];
+                        }
+                        techBySphere[tech.sphereId].push(tech);
+                    });
+                    
+                    let html = '';
+                    spheres.forEach(sphere => {
+                        if (techBySphere[sphere.id]) {
+                            html += `<h3>${sphere.name}</h3>`;
+                            techBySphere[sphere.id].forEach(tech => {
+                                const isChecked = userTechs.includes(tech.id.toString());
+                                html += `
+                                    <div>
+                                        <input type="checkbox" id="tech_${tech.id}" name="tech" value="${tech.id}" ${isChecked ? 'checked' : ''}>
+                                        <label for="tech_${tech.id}">${tech.name}</label>
+                                    </div>
+                                `;
+                            });
+                        }
+                    });
+                    
+                    document.getElementById("technologies").innerHTML = html;
+                });
+            };
+        }
+        
+        function saveTechnologies() {
+            const selectedTechs = Array.from(document.querySelectorAll('input[name="tech"]:checked')).map(el => el.value);
+            const userId = localStorage.getItem("currentUserId");
+            
+            if (!userId) {
+                showMessage("Ошибка авторизации", "error", "techMessage");
+                return;
+            }
+            
+            const transaction = db.transaction(["Users"], "readwrite");
+            const usersStore = transaction.objectStore("Users");
+            
+            const request = usersStore.get(parseInt(userId));
+            
+            request.onsuccess = function() {
+                const user = request.result;
+                if (user) {
+                    user.technologies = selectedTechs;
+                    
+                    const updateRequest = usersStore.put(user);
+                    
+                    updateRequest.onsuccess = function() {
+                        showMessage("Технологии успешно сохранены!", "success", "techMessage");
+                        setTimeout(() => {
+                            showDashboard();
+                        }, 1000);
+                    };
+                    
+                    updateRequest.onerror = function(event) {
+                        showMessage("Ошибка при сохранении: " + event.target.error, "error", "techMessage");
+                    };
+                }
+            };
+        }
+        
+        function logout() {
+            localStorage.removeItem("currentUserId");
+            document.getElementById("authSection").classList.remove("hidden");
+            document.getElementById("dashboard").classList.add("hidden");
+            showLoginForm();
+        }
+        
+        function showMessage(text, type, elementId) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+        }
+    </script>
+</body>
+</html>

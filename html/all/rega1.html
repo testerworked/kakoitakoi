@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация с IndexedDB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <h1>Регистрация пользователя</h1>
+    <form id="registrationForm">
+        <div class="form-group">
+            <label for="username">Имя пользователя:</label>
+            <input type="text" id="username" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="telephone">Телефон:</label>
+            <input type="tel" id="telephone" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="sphere">Сфера деятельности:</label>
+            <select id="sphere" required>
+                <option value="">Выберите сферу</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="technology">Технология:</label>
+            <select id="technology" required>
+                <option value="">Выберите технологию</option>
+            </select>
+        </div>
+        
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+    
+    <div id="message" class="message"></div>
+
+    <script>
+        // Глобальная переменная для базы данных
+        let db;
+        const dbName = 'UserRegistrationDB';
+        const dbVersion = 1;
+
+        // Инициализация базы данных
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('UserRegistrationDB', 2); // Увеличиваем версию
+                
+                request.onerror = (event) => {
+                    console.error('Ошибка открытия DB:', event.target.error);
+                    reject('DB error');
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('DB opened successfully');
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    console.log('DB upgrade needed');
+                    
+                    // Удаляем старые хранилища (если они есть)
+                    if (db.objectStoreNames.contains('Users')) db.deleteObjectStore('Users');
+                    if (db.objectStoreNames.contains('Spheres')) db.deleteObjectStore('Spheres');
+                    if (db.objectStoreNames.contains('Technology')) db.deleteObjectStore('Technology');
+                    
+                    // Создаём хранилища заново
+                    const usersStore = db.createObjectStore('Users', { keyPath: 'id', autoIncrement: true });
+                    usersStore.createIndex('email', 'email', { unique: true });
+                    
+                    const spheresStore = db.createObjectStore('Spheres', { keyPath: 'id', autoIncrement: true });
+                    spheresStore.createIndex('name', 'name', { unique: true });
+                    
+                    const techStore = db.createObjectStore('Technology', { keyPath: 'id', autoIncrement: true });
+                    techStore.createIndex('sphereId', 'sphereId', { unique: false });
+                    
+                    // Добавляем начальные данные СРАЗУ в транзакции
+                    const spheres = [
+                        { name: 'Веб-разработка' },
+                        { name: 'Мобильная разработка' },
+                        { name: 'Data Science' },
+                        { name: 'Кибербезопасность' }
+                    ];
+                    
+                    spheres.forEach(sphere => {
+                        spheresStore.add(sphere);
+                    });
+                    
+                    console.log('DB structure created with initial data');
+                };
+            });
+        }
+
+
+
+        function checkSpheres() {
+            const tx = db.transaction('Spheres', 'readonly');
+            const store = tx.objectStore('Spheres');
+            const request = store.getAll();
+            
+            request.onsuccess = () => {
+                console.log('Spheres in DB:', request.result);
+            };
+        }
+
+
+
+        // Добавление начальных данных
+        function addInitialData(db) {
+            return new Promise((resolve) => {
+                const spheres = [
+                    { name: 'Веб-разработка' },
+                    { name: 'Мобильная разработка' },
+                    { name: 'Data Science' },
+                    { name: 'Кибербезопасность' }
+                ];
+                
+                const technologies = [
+                    { name: 'JavaScript', sphereId: 1 },
+                    { name: 'Python', sphereId: 1 },
+                    { name: 'React Native', sphereId: 2 },
+                    { name: 'TensorFlow', sphereId: 3 },
+                    { name: 'Kotlin', sphereId: 2 },
+                    { name: 'Django', sphereId: 1 }
+                ];
+                
+                const tx = db.transaction(['Spheres', 'Technology'], 'readwrite');
+                const spheresStore = tx.objectStore('Spheres');
+                const techStore = tx.objectStore('Technology');
+                
+                // Добавляем сферы
+                spheres.forEach(sphere => {
+                    spheresStore.add(sphere);
+                });
+                
+                // После добавления сфер добавляем технологии
+                tx.oncomplete = () => {
+                    const tx2 = db.transaction('Technology', 'readwrite');
+                    const techStore2 = tx2.objectStore('Technology');
+                    
+                    technologies.forEach(tech => {
+                        techStore2.add(tech);
+                    });
+                    
+                    tx2.oncomplete = () => {
+                        resolve();
+                    };
+                };
+            });
+        }
+
+        function getAllSpheres() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('Spheres', 'readonly');
+                const store = tx.objectStore('Spheres');
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    console.log('Получены сферы:', request.result);
+                    resolve(request.result);
+                };
+                request.onerror = () => {
+                    console.error('Ошибка получения сфер');
+                    reject('Ошибка получения сфер');
+                };
+            });
+        }
+        // Получение технологий по сфере
+        function getTechnologiesBySphere(sphereId) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('Technology', 'readonly');
+                const store = tx.objectStore('Technology');
+                const index = store.index('sphereId');
+                const request = index.getAll(sphereId);
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject('Ошибка при получении технологий');
+            });
+        }
+
+        // Добавление пользователя
+        function addUser(user) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('Users', 'readwrite');
+                const store = tx.objectStore('Users');
+                
+                const request = store.add(user);
+                
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => {
+                    if (event.target.error.name === 'ConstraintError') {
+                        if (event.target.error.message.includes('email')) {
+                            reject('Пользователь с таким email уже существует');
+                        } else {
+                            reject('Пользователь с таким именем уже существует');
+                        }
+                    } else {
+                        reject('Ошибка при добавлении пользователя');
+                    }
+                };
+            });
+        }
+
+        // Отображение сообщений
+        function showMessage(text, type = 'success') {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = 'message ' + type;
+        }
+
+        // Заполнение выпадающих списков
+        async function populateDropdowns() {
+            const sphereSelect = document.getElementById('sphere');
+            const techSelect = document.getElementById('technology');
+            
+            // Очищаем списки
+            sphereSelect.innerHTML = '<option value="">Выберите сферу</option>';
+            techSelect.innerHTML = '<option value="">Выберите технологию</option>';
+            
+            try {
+                // Получаем сферы из базы
+                const spheres = await getAllSpheres();
+                
+                if (!spheres || spheres.length === 0) {
+                    console.warn('Нет доступных сфер деятельности в базе');
+                    showMessage('Нет доступных сфер деятельности', 'error');
+                    return;
+                }
+                
+                // Заполняем список сфер
+                spheres.forEach(sphere => {
+                    const option = new Option(sphere.name, sphere.id);
+                    sphereSelect.add(option);
+                });
+                
+                // Обработчик изменения выбора сферы
+                sphereSelect.addEventListener('change', async function() {
+                    techSelect.innerHTML = '<option value="">Выберите технологию</option>';
+                    
+                    if (!this.value) return;
+                    
+                    try {
+                        const technologies = await getTechnologiesBySphere(parseInt(this.value));
+                        
+                        if (technologies && technologies.length > 0) {
+                            technologies.forEach(tech => {
+                                techSelect.add(new Option(tech.name, tech.id));
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Ошибка загрузки технологий:', error);
+                        showMessage('Ошибка загрузки технологий', 'error');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Ошибка загрузки сфер:', error);
+                showMessage('Ошибка загрузки списка сфер', 'error');
+            }
+        }
+
+        // Обработка формы регистрации
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const telephone = document.getElementById('telephone').value.trim();
+            const sphereId = document.getElementById('sphere').value;
+            const technologyId = document.getElementById('technology').value;
+            
+            // Валидация
+            if (!username || !email || !telephone || !sphereId || !technologyId) {
+                showMessage('Все поля обязательны для заполнения', 'error');
+                return;
+            }
+            
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showMessage('Введите корректный email', 'error');
+                return;
+            }
+            
+            try {
+                await addUser({
+                    username,
+                    email,
+                    telephone,
+                    sphereId: parseInt(sphereId),
+                    technologyId: parseInt(technologyId),
+                    registrationDate: new Date().toISOString()
+                });
+                
+                showMessage('Регистрация успешно завершена!');
+                this.reset();
+            } catch (error) {
+                showMessage(error, 'error');
+            }
+        });
+
+        indexedDB.deleteDatabase('UserRegistrationDB');
+        // Инициализация при загрузке страницы
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initDB();
+
+
+
+
+                await populateDropdowns(); // Должен вызываться после initDB()
+                console.log('Инициализация завершена');
+                                // После initDB()
+                initDB().then(() => {
+                    checkSpheres();
+                    populateDropdowns();
+                });
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        });
+    </script>
+</body>
+</html>

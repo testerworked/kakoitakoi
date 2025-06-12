@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Бизнесмены: Lite</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+        #officeImage {
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+   <div id="game">
+  <h1>IT Бизнесмены: Lite</h1>
+  <div id="goals">
+    <h3>Цели:</h3>
+    <p>💰 Финансовая победа: $<span id="targetMoney">0</span>/10,000,000</p>
+    <p>🚀 Технологии: <span id="techProgress">0</span>/3 на max уровне</p>
+    <p>🌍 Доля рынка: <span id="marketShare">0</span>%</p>
+    <button onclick="checkWinConditions()">Проверить прогресс</button>
+</div>
+
+  <div id="office">
+      <button id="rentOfficeBtn" style="display: none;" onclick="rentOffice()">Арендовать офис ($30,000)</button>
+      <p id="officeStatus">Офис: Нет</p>
+  </div>
+  <div id="stats">
+    Деньги: $<span id="money">10000</span> | Месяц: <span id="month">1</span>
+  </div>
+  <div id="technologies">
+    <h3>Технологии</h3>
+    <button onclick="research('software')">Исследовать софт ($1000)</button>
+    <button onclick="research('hardware')">Исследовать железо ($1500)</button>
+    <button onclick="research('biotech')">Исследовать биотех ($2000)</button>
+  </div>
+  <div id="employees">
+    <h3>Сотрудники (0/3)</h3>
+    <button onclick="hire('engineer')">Нанять инженера ($500/мес)</button>
+  </div>
+  <div id="actions">
+    <button onclick="nextMonth()">Следующий месяц</button>
+  </div>
+  <div id="log"></div>
+</div>
+
+<!-- Добавлен блок с картинкой офиса -->
+<div id="officeImage" style="display: none; position: fixed; right: 20px; top: 20px; width: 200px;">
+    <img src="office1.png" alt="Офис" style="width: 100%;">
+    <p style="text-align: center;">Ваш новый офис!</p>
+</div>
+
+
+<!-- Финальный экран (изначально скрыт) -->
+<div id="winScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: white; text-align: center; padding-top: 20%;">
+    <h1 id="winTitle">Победа!</h1>
+    <p id="winText"></p>
+    <button onclick="resetGame()">Начать заново</button>
+</div>
+
+<script>
+    let money = 10000;
+    let month = 1;
+    let technologies = { software: 0, hardware: 0, biotech: 0 };
+    let employees = [];
+    let hasOffice = false;
+// Добавляем переменные для отслеживания прогресса
+let targetMoney = 10000000;
+let marketShare = 0;
+let defeatedCompetitors = 0;
+
+// Проверка условий победы
+function checkWinConditions() {
+    // Проверяем деньги
+    if (money >= targetMoney) {
+        showWinScreen("Финансовая империя", "Вы стали самым богатым техно-магнатом в мире!");
+        return;
+    }
+    
+    // Проверяем технологии (все на 10 уровне)
+    const maxTechReached = Object.values(technologies).filter(lvl => lvl >= 10).length;
+    if (maxTechReached >= 3) {
+        showWinScreen("Технологическая сингулярность", "Ваши изобретения изменили человечество навсегда!");
+        return;
+    }
+    
+    // Проверяем долю рынка (условно)
+    if (marketShare >= 80) {
+        showWinScreen("Глобальное доминирование", "Весь рынок технологий теперь под вашим контролем!");
+        return;
+    }
+    
+    // Если ничего не выполнено
+    log("Цели ещё не достигнуты. Продолжайте играть!");
+}
+
+// Показ финального экрана
+function showWinScreen(title, text) {
+    document.getElementById("winTitle").textContent = title;
+    document.getElementById("winText").textContent = text;
+    document.getElementById("winScreen").style.display = "block";
+}
+
+// Сброс игры
+function resetGame() {
+    //document.getElementById("log").innerHTML = "";
+    const logElement = document.getElementById("log");
+    const logs = logElement.innerHTML.split("<br>").slice(-3); // Последние 3 строки
+    logElement.innerHTML = logs.join("<br>");
+
+    money = 10000;
+    month = 1;
+    technologies = { software: 0, hardware: 0, biotech: 0 };
+    employees = [];
+    hasOffice = false;
+    marketShare = 0;
+    document.getElementById("winScreen").style.display = "none";
+    updateUI();
+    log("Игра перезапущена!");
+}
+    function updateUI() {
+        document.getElementById("money").textContent = money;
+        document.getElementById("month").textContent = month;
+        
+        // Показываем кнопку аренды офиса при наличии $30k
+        if (money >= 30000 && !hasOffice) {
+            document.getElementById("rentOfficeBtn").style.display = "block";
+        } else {
+            document.getElementById("rentOfficeBtn").style.display = "none";
+        }
+        
+        // Обновляем статус офиса
+        document.getElementById("officeStatus").textContent = hasOffice ? "Офис: Арендован" : "Офис: Нет";
+    }
+
+    function rentOffice() {
+        if (money >= 30000 && !hasOffice) {
+            money -= 30000;
+            hasOffice = true;
+            log("Вы арендовали офис! Лимит сотрудников увеличен до 5, исследования дешевле на 20%.");
+            document.getElementById("officeImage").style.display = "block"; // Показываем картинку
+            updateUI();
+        }
+    }
+
+    function hire(type) {
+        const maxEmployees = hasOffice ? 5 : 3;
+        if (employees.length < maxEmployees) {
+            employees.push(type);
+            log(`Нанят ${type}!`);
+        } else {
+            log(`Лимит сотрудников (${maxEmployees})!`);
+        }
+        updateUI();
+    }
+
+    function research(type) {
+        const baseCost = { software: 1000, hardware: 1500, biotech: 2000 }[type];
+        const discount = hasOffice ? 0.8 : 1;
+        const cost = Math.floor(baseCost * discount);
+        
+        if (money >= cost) {
+            money -= cost;
+            technologies[type]++;
+            log(`Исследована технология (${type})! Уровень: ${technologies[type]}. Стоимость: $${cost}`);
+        } else {
+            log(`Недостаточно денег (нужно $${cost})!`);
+        }
+        updateUI();
+    }
+
+function nextMonth() {
+    month++;
+    
+    // Зарплаты и расходы
+    employees.forEach(() => money -= 500);
+    
+    // Продажи технологий (увеличивают долю рынка)
+    Object.keys(technologies).forEach(tech => {
+        if (technologies[tech] > 0) {
+            const income = technologies[tech] * 500;
+            money += income;
+            marketShare = Math.min(marketShare + 2, 100); // +2% за каждую продажу
+            log(`Продана технология ${tech}: +$${income}`);
+        }
+    });
+    
+    // Случайные события (могут помочь или навредить)
+    if (Math.random() < 0.3) randomEvent();
+    
+    updateUI();
+    
+    // Автопроверка победы раз в год
+    if (month % 12 === 0) checkWinConditions();
+}
+
+    function randomEvent() {
+        const events = [
+            { text: "Хакеры украли $1000!", action: () => money -= 1000 },
+            { text: "Инвестор вложил $2000!", action: () => money += 2000 }
+        ];
+        const event = events[Math.floor(Math.random() * events.length)];
+        event.action();
+        log(event.text);
+    }
+
+    function log(message) {
+        document.getElementById("log").innerHTML += message + "<br>";
+    }
+</script>
+</body>
+</html>

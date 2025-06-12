@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; }
+        .success { background-color: #dff0d8; color: #3c763d; }
+        .error { background-color: #f2dede; color: #a94442; }
+        .links { margin-top: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Регистрация</h1>
+    <form id="registrationForm">
+        <div class="form-group">
+            <label for="username">Имя пользователя:</label>
+            <input type="text" id="username" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" required minlength="6">
+        </div>
+        
+        <div class="form-group">
+            <label for="confirmPassword">Подтвердите пароль:</label>
+            <input type="password" id="confirmPassword" required>
+        </div>
+        
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+    
+    <div class="links">
+        <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
+    </div>
+    
+    <div id="message" class="message"></div>
+    <img src="rega.png" alt="an image to attract attention" class="responsive-image">
+
+    <script src="auth.js"></script>
+    <script>
+        // Инициализация базы данных
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initDB();
+            } catch (error) {
+                showMessage('Ошибка инициализации приложения', 'error');
+                console.error('Ошибка инициализации:', error);
+            }
+        });
+
+        // Обработка формы регистрации
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Валидация
+            if (!username || !email || !password || !confirmPassword) {
+                showMessage('Все поля обязательны для заполнения', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('Пароли не совпадают', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('Пароль должен содержать минимум 6 символов', 'error');
+                return;
+            }
+            
+            try {
+                // Хеширование пароля (упрощенное, в реальном приложении используйте bcrypt)
+                const hashedPassword = await hashPassword(password);
+                
+                await registerUser({
+                    username,
+                    email,
+                    password: hashedPassword,
+                    registrationDate: new Date().toISOString()
+                });
+                
+                showMessage('Регистрация успешно завершена! Перенаправление...', 'success');
+                
+                // Перенаправление после задержки
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 1500);
+                
+            } catch (error) {
+                showMessage(error, 'error');
+            }
+        });
+
+        function showMessage(text, type = 'success') {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = 'message ' + type;
+        }
+    </script>
+</body>
+</html>
